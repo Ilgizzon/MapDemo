@@ -1,0 +1,46 @@
+PODS:
+  - Alamofire (4.9.1)
+  - Mapbox-iOS-SDK (6.2.2):
+    - MapboxMobileEvents (~> 0.10.4)
+  - MapboxDirections (1.0.0):
+    - Polyline (~> 4.2)
+    - Turf (~> 1.0)
+  - MapboxMobileEvents (0.10.5)
+  - Polyline (4.2.1)
+  - Realm (10.1.0):
+    - Realm/Headers (= 10.1.0)
+  - Realm/Headers (10.1.0)
+  - RealmSwift (10.1.0):
+    - Realm (= 10.1.0)
+  - Turf (1.0.0)
+
+DEPENDENCIES:
+  - Alamofire (~> 4.7)
+  - Mapbox-iOS-SDK (~> 6.2.1)
+  - MapboxDirections (~> 1.0)
+  - RealmSwift
+
+SPEC REPOS:
+  https://cdn.cocoapods.org/:
+    - Alamofire
+    - Mapbox-iOS-SDK
+    - MapboxDirections
+    - MapboxMobileEvents
+    - Polyline
+    - Realm
+    - RealmSwift
+    - Turf
+
+SPEC CHECKSUMS:
+  Alamofire: 85e8a02c69d6020a0d734f6054870d7ecb75cf18
+  Mapbox-iOS-SDK: 3f83697efa97f3c21ea7f65c1e75205e1dc030ee
+  MapboxDirections: 35c071db30397f06708ae305287f10395586e154
+  MapboxMobileEvents: 7f6fb7fb0360302f524d198d36ccec3a0beae523
+  Polyline: 0e9890790292741c8186201a536b6bb6a78d02dd
+  Realm: 100df88a0faf5328f48477427e4b3e1a1598bae3
+  RealmSwift: 725d1c10df64964b04aaa0058c19ce0f4b4c3f5a
+  Turf: 29b37f6d67f184a7b2d00f594c3e20b3e5474b7d
+
+PODFILE CHECKSUM: ef3832e0f72b21507d08a68ade5b1da17062140e
+
+COCOAPODS: 1.10.0
