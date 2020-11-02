@@ -40,17 +40,17 @@ final class RealmService {
     
 
     
-    static func save(_ models: [Object], complete: @escaping ([Object]) -> Void, failed: @escaping (Error) -> Void){
+    static func save(_ models: [Object], complete: (([Object]) -> Void)? = nil) {
         realmQueue.async {
             autoreleasepool {
                 
                 let realm = Realm.db
-
+                realm.beginWrite()
                 try! realm.safeWrite {
                     realm.add(models, update: .modified)
                 }
                 
-                complete(models)
+                complete?(models)
             }
         }
     }

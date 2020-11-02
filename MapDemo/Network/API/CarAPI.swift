@@ -42,7 +42,7 @@ class CarAPI {
     static func getCarImage(searchImage: String, imageName: String, completion: @escaping (Result<(Data,URL), Error>) -> Void){
         RequestManager.shared.download(
             fileName: imageName,
-            url: "\(Constants.IMAGES_URL)\(searchImage)",
+            url: "\(Constants.IMAGES_URL)\(searchImage.replacingOccurrences(of: " ", with: "", options: NSString.CompareOptions.literal, range:nil))",
             completed: { response in
                 
                 switch response.result {

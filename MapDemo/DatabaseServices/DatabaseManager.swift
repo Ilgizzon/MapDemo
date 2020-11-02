@@ -45,8 +45,6 @@ class DatabaseManager {
                             let carsList = self.castingModels(fromList: modelsRealm, to: CarModel.self)
                             
                             completion(.success(carsList))
-                        } failed: { error in
-                            completion(.failure(error))
                         }
                     }
                     
@@ -64,12 +62,40 @@ class DatabaseManager {
         completion(carsList)
     }
     
+    func getImage(searchImage: String, carId: Int, completion: @escaping (Result<(Data, String), Error>) -> Void){
+
+        guard let imageDataPath = getDataFromStorage(model: CarRealm.self).filter("id = \(carId)").first?.imagePath,
+              let imageData = loadFileFromLocalPath(imageDataPath)
+        else {
+            
+            CarAPI.getCarImage(searchImage: searchImage, imageName: "\(carId)") { [weak self] (result: Result<(Data, URL), Error>) in
+                
+                guard let self = self else {
+                    return
+                }
+                
+                switch result {
+                
+                case .success((let data, let url)):
+                  //  self.updateImagePathInCache(path: url)
+                    completion(.success((data,url.lastPathComponent)))
+                case .failure(let error):
+                    completion(.failure(error))
+                }
+            }
+            
+            return
+        }
+        completion(.success((imageData, "\(carId)")))
+
+    }
+    
     private func cacheActual() -> Bool {
         guard let cacheObject = RealmService.getData(type: CarRealm.self).first,
               let cacheTime = Calendar.current.dateComponents(
-                [.minute],
+                [.hour],
                 from: cacheObject.timestamp,
-                to: Date()).minute else {
+                to: Date()).hour else {
             
             return false
         }
@@ -93,5 +119,19 @@ class DatabaseManager {
             returnList.append(toElement)
         }
         return returnList
+    }
+    
+    func loadFileFromLocalPath(_ localFilePath: String) ->Data? {
+       return try? Data(contentsOf: URL(fileURLWithPath: localFilePath))
+    }
+    
+    func updateImagePathInCache(path: URL){
+        let stringPath = path.absoluteString
+        let id: Int = Int(path.lastPathComponent) ?? 0
+        guard let car = getDataFromStorage(model: CarRealm.self).filter("id = \(id)").first else {
+            return
+        }
+        car.imagePath = stringPath
+        RealmService.save([car])
     }
 }

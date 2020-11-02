@@ -31,7 +31,6 @@ class ViewController: UIViewController, MGLMapViewDelegate {
         mapView.delegate = self
         view.addSubview(mapView)
         viewModel?.getCars()
-        setUpSegmentedControls()
 
     }
 
@@ -42,16 +41,7 @@ class ViewController: UIViewController, MGLMapViewDelegate {
         view.addSubview(sheetView ?? UIView())
     }
 
-    func setUpSegmentedControls() {
-        let items = ["Move", "Directions"]
-        segmentedControl = UISegmentedControl(items: items)
-        let frame = UIScreen.main.bounds
-        segmentedControl.frame = CGRect(x: frame.minX + 10, y: frame.minY + 50, width: frame.width - 20, height: 30)
-        segmentedControl.selectedSegmentIndex = 0
-        segmentedControl.backgroundColor = .white
-        segmentedControl.addTarget(self, action: #selector(segmentedValueChanged(_:)), for: .valueChanged)
-        self.view.addSubview(segmentedControl)
-    }
+
 
     
     
@@ -61,12 +51,12 @@ class ViewController: UIViewController, MGLMapViewDelegate {
     }
     
     func mapView(_ mapView: MGLMapView, didSelect annotation: MGLAnnotation){
-        print("Annotation select: \(annotation)")
-        let car = CarModel()
-        car.fuelPercentage = 78
-        car.name = "Mercedes-Benz CLA 2019"
-        car.plateNumber = "x478xx777"
-        sheetView?.setData(car: car)
+        guard let mapAnnotation = annotation as? MapAnnotation, let id = mapAnnotation.id else {
+            return
+        }
+        let car = viewModel?.getCurrentCar(id: id)
+        sheetView?.setData(car: car ?? CarModel())
+        setupDirections(car: car ?? CarModel())
     }
     
     func mapView(_ mapView: MGLMapView, imageFor annotation: MGLAnnotation) -> MGLAnnotationImage? {
@@ -90,38 +80,13 @@ class ViewController: UIViewController, MGLMapViewDelegate {
         return annotationImage
     }
 
-    @objc func segmentedValueChanged(_ sender: UISegmentedControl) {
-        resetDrawingView()
-
-        switch sender.selectedSegmentIndex {
-        
-        case 1:
-            setupDirections()
-        default:
-            return
-        }
-    }
-
-    func resetDrawingView() {
-        if let annotations = mapView.annotations {
-            mapView.removeAnnotations(annotations)
-        }
-        mapView.isUserInteractionEnabled = true
-    }
-
-    func setupDirections() {
-        // Add a point annotation
 
 
-        // Add a point annotation
-        let annotation2 = MapAnnotation()
-        annotation2.coordinate = CLLocationCoordinate2D(latitude: 38.9131752, longitude: -77.0324047)
-        annotation2.carImage = UIImage(named: "black")?.rotate(radians: 45)
-        annotation2.id = "33"
-        mapView.addAnnotation(annotation2)
+    func setupDirections(car: CarModel) {
 
-        let wp1 = Waypoint(coordinate: CLLocationCoordinate2D(latitude: 38.9131752, longitude: -77.0324047), name: "Mapbox")
-        let wp2 = Waypoint(coordinate: CLLocationCoordinate2D(latitude: 38.8977, longitude: -77.0365), name: "White House")
+
+        let wp1 = Waypoint(coordinate: mapView.userLocation?.coordinate ?? CLLocationCoordinate2D(), name: "You")
+        let wp2 = Waypoint(coordinate: CLLocationCoordinate2D(latitude: car.latitude, longitude: car.longitude), name: car.name)
         let options = RouteOptions(waypoints: [wp1, wp2])
         options.includesSteps = true
         options.routeShapeResolution = .full
@@ -156,6 +121,13 @@ class ViewController: UIViewController, MGLMapViewDelegate {
                     if var routeCoordinates = route.shape?.coordinates, routeCoordinates.count > 0 {
                         // Convert the route’s coordinates into a polyline.
                         let routeLine = MGLPolyline(coordinates: &routeCoordinates, count: UInt(routeCoordinates.count))
+                        if let annotations = self.mapView.annotations {
+                            for annotation in annotations {
+                                if ((annotation as? MGLPolyline) != nil) {
+                                    self.mapView.removeAnnotation(annotation)
+                                }
+                            }
+                        }
 
                         // Add the polyline to the map.
                         self.mapView.addAnnotation(routeLine)
@@ -172,16 +144,32 @@ class ViewController: UIViewController, MGLMapViewDelegate {
 }
 
 extension ViewController: ViewControllerDelegate {
-    func loadCars(cars: [CarModel]) {
-        for car in cars {
-            let annotation = MapAnnotation()
-            
-            annotation.coordinate = CLLocationCoordinate2D(latitude: car.latitude, longitude: car.longitude)
-            let image = car.color == "blue" ? UIImage(named: "blue")?.rotate(radians: Float(car.angle)) : UIImage(named: "black")?.rotate(radians: Float(car.angle))
-            annotation.carImage = image
-            annotation.id = "\(car.id)"
-            mapView.addAnnotation(annotation)
+    func loadImage(data: Data) {
+        let image = UIImage(data: data)
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else {
+                return
+            }
+            self.sheetView?.updateImage(carImage: image)
         }
+    }
+    
+    func loadCars(cars: [CarModel]) {
+        DispatchQueue.main.async  { [weak self] in
+            guard let self = self else {
+                return
+            }
+            for car in cars {
+                let annotation = MapAnnotation()
+                
+                annotation.coordinate = CLLocationCoordinate2D(latitude: car.latitude, longitude: car.longitude)
+                let image = car.color == "blue" ? UIImage(named: "blue")?.rotate(radians: Float(car.angle)) : UIImage(named: "black")?.rotate(radians: Float(car.angle))
+                annotation.carImage = image
+                annotation.id = "\(car.id)"
+                self.mapView.addAnnotation(annotation)
+            }
+        }
+
 
     }
 }
